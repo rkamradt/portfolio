@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -367,6 +368,35 @@
       text-align: center;
     }
 
+    /* ── Contact gate ── */
+    #contact-gate {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.3rem;
+    }
+
+    #contact-details {
+      display: none;
+      flex-direction: column;
+      gap: 0.4rem;
+      align-items: flex-end;
+    }
+
+    #contact-details a,
+    #contact-details span {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-mid);
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    #contact-details a:hover { color: var(--accent); text-decoration: none; }
+
     /* ── Responsive ── */
     @media (max-width: 600px) {
       .skill-row { grid-template-columns: 1fr; gap: 0.3rem; }
@@ -386,14 +416,20 @@
         <div class="title">Lead Principal Software Engineer &amp; Enterprise Architect</div>
       </div>
       <div class="contact">
-        <a href="mailto:randykamradt@gmail.com">
-          <svg class="contact-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-          randykamradt@gmail.com
-        </a>
+        <!-- Location is always visible -->
         <span>
           <svg class="contact-icon" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
           Rockport, ME
         </span>
+        <!-- Hidden until signed in -->
+        <div id="contact-details" style="display:none;flex-direction:column;gap:0.4rem;align-items:flex-end;"></div>
+        <!-- Sign-in gate (shown to anonymous visitors) -->
+        <div id="contact-gate" style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;margin-top:0.3rem;">
+          <span style="font-family:var(--mono);font-size:0.65rem;color:var(--text-dim);letter-spacing:0.05em;">
+            sign in to see contact details
+          </span>
+          <div id="google-signin-button"></div>
+        </div>
       </div>
     </div>
     <div class="header-links">
@@ -662,5 +698,85 @@
   </footer>
 
 </div>
+
+<script>
+(function() {
+  let googleClientId = null;
+
+  // 1. Fetch config, then initialize One Tap
+  fetch('/api/config')
+    .then(r => r.json())
+    .then(cfg => {
+      googleClientId = cfg.googleClientId;
+      initGoogleOneTap();
+    })
+    .catch(() => {/* backend unreachable, leave gate visible */});
+
+  function initGoogleOneTap() {
+    // Check if already signed in (session cookie present)
+    fetch('/api/protected', { credentials: 'include' })
+      .then(r => {
+        if (r.ok) return r.json();
+        throw new Error('not signed in');
+      })
+      .then(data => showContact(data))
+      .catch(() => {
+        // Not signed in — show One Tap
+        google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: handleCredential,
+          use_fedcm_for_prompt: true,
+        });
+        google.accounts.id.prompt();
+        google.accounts.id.renderButton(
+          document.getElementById('google-signin-button'),
+          { theme: 'filled_black', size: 'medium', text: 'signin_with', shape: 'rectangular' }
+        );
+      });
+  }
+
+  function handleCredential(response) {
+    fetch('/api/auth/google', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: response.credential }),
+    })
+    .then(r => { if (!r.ok) throw new Error('auth failed'); return r.json(); })
+    .then(() => fetch('/api/protected', { credentials: 'include' }))
+    .then(r => r.json())
+    .then(data => showContact(data))
+    .catch(() => {/* leave gate visible */});
+  }
+
+  function showContact(data) {
+    document.getElementById('contact-gate').style.display = 'none';
+    const el = document.getElementById('contact-details');
+    el.style.display = 'flex';
+    // Build contact rows for each key in data
+    el.innerHTML = '';
+    if (data.email) {
+      el.innerHTML += `<a href="mailto:${data.email}">
+        <svg class="contact-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        ${data.email}</a>`;
+    }
+    if (data.phone) {
+      el.innerHTML += `<span>
+        <svg class="contact-icon" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.28-.28.67-.36 1.02-.25 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+        ${data.phone}</span>`;
+    }
+    el.innerHTML += `<a href="#" id="signout-link" style="font-size:0.65rem;color:var(--text-dim);margin-top:0.3rem;">sign out</a>`;
+    document.getElementById('signout-link').addEventListener('click', function(e) {
+      e.preventDefault();
+      fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+        .finally(() => {
+          google.accounts.id.disableAutoSelect();
+          el.style.display = 'none';
+          document.getElementById('contact-gate').style.display = 'flex';
+        });
+    });
+  }
+})();
+</script>
 </body>
 </html>
