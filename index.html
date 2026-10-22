@@ -403,9 +403,81 @@
       .contact { align-items: flex-start; }
       .header-top { flex-direction: column; }
     }
+  /* ── Halloween ── */
+  @keyframes bat-fly {
+    0%   { transform: translateX(-60px) translateY(0px) scaleX(1); opacity: 0; }
+    10%  { opacity: 1; }
+    45%  { transform: translateX(45vw) translateY(-40px) scaleX(1); }
+    50%  { transform: translateX(50vw) translateY(-40px) scaleX(-1); }
+    90%  { opacity: 1; }
+    100% { transform: translateX(110vw) translateY(10px) scaleX(-1); opacity: 0; }
+  }
+
+  .bat {
+    position: fixed;
+    font-size: 1.3rem;
+    pointer-events: none;
+    z-index: 9998;
+    animation: bat-fly linear infinite;
+  }
+  .bat:nth-child(1) { top: 8%;  animation-duration: 16s; animation-delay: 0s; }
+  .bat:nth-child(2) { top: 22%; animation-duration: 21s; animation-delay: 6s; }
+  .bat:nth-child(3) { top: 55%; animation-duration: 13s; animation-delay: 11s; }
+
+  .web-corner {
+    position: fixed;
+    width: 140px;
+    height: 140px;
+    opacity: 0.2;
+    pointer-events: none;
+    z-index: 9997;
+  }
+  .web-corner.tl { top: 0; left: 0; }
+  .web-corner.tr { top: 0; right: 0; transform: scaleX(-1); }
+
+  .halloween-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: #ff6b00;
+    margin-top: 0.3rem;
+  }
   </style>
 </head>
 <body>
+
+<!-- Halloween decorations -->
+<div class="bat" aria-hidden="true">🦇</div>
+<div class="bat" aria-hidden="true">🦇</div>
+<div class="bat" aria-hidden="true">🦇</div>
+<svg class="web-corner tl" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#ff6b00" stroke-width="0.9" fill="none">
+    <line x1="0" y1="0" x2="140" y2="0"/>
+    <line x1="0" y1="0" x2="0" y2="140"/>
+    <line x1="0" y1="0" x2="70" y2="140"/>
+    <line x1="0" y1="0" x2="140" y2="70"/>
+    <path d="M 35 0 Q 17 17 0 35"/>
+    <path d="M 70 0 Q 35 35 0 70"/>
+    <path d="M 105 0 Q 52 52 0 105"/>
+    <path d="M 140 0 Q 70 70 0 140"/>
+  </g>
+</svg>
+<svg class="web-corner tr" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#ff6b00" stroke-width="0.9" fill="none">
+    <line x1="0" y1="0" x2="140" y2="0"/>
+    <line x1="0" y1="0" x2="0" y2="140"/>
+    <line x1="0" y1="0" x2="70" y2="140"/>
+    <line x1="0" y1="0" x2="140" y2="70"/>
+    <path d="M 35 0 Q 17 17 0 35"/>
+    <path d="M 70 0 Q 35 35 0 70"/>
+    <path d="M 105 0 Q 52 52 0 105"/>
+    <path d="M 140 0 Q 70 70 0 140"/>
+  </g>
+</svg>
+
 <div class="page">
 
   <!-- HEADER -->
@@ -414,6 +486,7 @@
       <div>
         <div class="name">Randal L. Kamradt</div>
         <div class="title">Lead Principal Software Engineer &amp; Enterprise Architect</div>
+        <div class="halloween-badge">🎃 halloween edition</div>
       </div>
       <div class="contact">
         <!-- Location is always visible -->
@@ -708,7 +781,7 @@
   </section>
 
   <footer class="footer">
-    randal l. kamradt &nbsp;·&nbsp; rockport, me &nbsp;·&nbsp; 25+ years building distributed systems
+    randal l. kamradt &nbsp;·&nbsp; rockport, me &nbsp;·&nbsp; 25+ years building distributed systems &nbsp;·&nbsp; 🎃 halloween edition
   </footer>
 
 </div>
